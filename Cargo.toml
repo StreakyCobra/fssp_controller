@@ -1,0 +1,7 @@
+[package]
+name = "fssp_simulator"
+version = "0.1.0"
+authors = ["Fabien Dubosson <fabien.dubosson@gmail.com>"]
+
+[dependencies]
+gilrs = "0.6.1"
