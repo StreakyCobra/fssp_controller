@@ -1,20 +1,32 @@
 #[derive(Clone, Debug)]
 pub enum Control {
-    Absolute,
     MoveTo {
         x: Option<i32>,
         y: Option<i32>,
         z: Option<i32>,
         f: Option<i32>,
     },
+    MoveToHome,
     NoOp,
-    Relative,
+    Pause {
+        p: Option<i32>,
+        s: Option<i32>,
+    },
+    SetAbsolute,
+    SetAttachPosition {
+        n: i32,
+        x: i32,
+        y: i32,
+        z: i32,
+    },
     SetPosition {
         x: Option<i32>,
         y: Option<i32>,
         z: Option<i32>,
         e: Option<i32>,
     },
+    SetRelative,
+    Shutdown,
 }
 
 pub trait GCode {
@@ -23,8 +35,7 @@ pub trait GCode {
 
 impl GCode for Control {
     fn to_gcode(&self) -> String {
-        match self {
-            Control::Absolute => String::from("G90;"),
+        match *self {
             Control::MoveTo { x, y, z, f } => {
                 let mut params = String::new();
                 match x {
@@ -40,12 +51,38 @@ impl GCode for Control {
                     Some(val) => params.push_str(&format!("z{} ", val)),
                 }
                 match f {
-                    None => format!("G0 {};", params),
-                    Some(val) => format!("G1 {}f{} ;", params, val),
+                    None => format!("G0 {}", params),
+                    Some(val) => format!("G1 {}f{}", params, val),
                 }
-            }
+            },
+            Control::MoveToHome => format!("G28"),
             Control::NoOp => format!(""),
-            Control::Relative => String::from("G91;"),
+            Control::Pause { s, p } => {
+                let mut params = String::new();
+                match s {
+                    None => (),
+                    Some(val) => params.push_str(&format!("s{}", val)),
+                }
+                match p {
+                    None => (),
+                    Some(val) => params.push_str(&format!("p{}", val)),
+                }
+                format!("G4 {}", params)
+            },
+            Control::SetAbsolute => String::from("G90"),
+            Control::SetAttachPosition { n, x, y, z } => {
+                let mut params = String::new();
+                params.push_str(&format!("x{} ", x));
+                params.push_str(&format!("y{} ", y));
+                params.push_str(&format!("z{} ", z));
+                let code = match n {
+                    1 => "M131",
+                    2 => "M132",
+                    3 => "M133",
+                    _ => panic!("Unsupported attach point number")
+                };
+                format!("{} {}", code, params)
+            },
             Control::SetPosition { x, y, z, e } => {
                 let mut params = String::new();
                 match x {
@@ -62,10 +99,12 @@ impl GCode for Control {
                 }
                 match e {
                     None => (),
-                    Some(val) => params.push_str(&format!("e {}", val)),
+                    Some(val) => params.push_str(&format!("e{}", val)),
                 }
-                format!("G92 {};", params)
-            }
+                format!("G92 {}", params)
+            },
+            Control::SetRelative => String::from("G91"),
+            Control::Shutdown => String::from("M00"),
         }
     }
 }
