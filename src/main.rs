@@ -8,14 +8,19 @@ use gilrs::{Button, Event, EventType, Gilrs};
 fn main() {
     let mut gilrs = Gilrs::new().unwrap();
 
-    for (_id, gamepad) in gilrs.gamepads() {
-        println!("{} is {:?}", gamepad.name(), gamepad.power_info());
+    if let Some((_id, gamepad)) = gilrs.gamepads().nth(0) {
+        println!("{}", gamepad.os_name())
     }
 
     loop {
-        while let Some(Event { id, event, time }) = gilrs.next_event() {
+        while let Some(Event {
+            id: _,
+            event,
+            time: _,
+        }) = gilrs.next_event()
+        {
             let control = match event {
-                EventType::ButtonReleased { 0: button, 1: code } => match button {
+                EventType::ButtonReleased { 0: button, 1: _ } => match button {
                     Button::DPadDown => Some(Control::MoveTo {
                         x: None,
                         y: Some(-10),
