@@ -2,12 +2,14 @@ extern crate gilrs;
 extern crate nalgebra as na;
 
 pub mod lander;
+pub mod physics;
 pub mod simulator;
 
 use gilrs::{Button, Event, EventType, Gilrs};
 use lander::Lander;
+use na::Vector3;
+use physics::State;
 use simulator::{Command, GCode};
-
 
 fn main() {
     lander_test();
@@ -15,8 +17,16 @@ fn main() {
 }
 
 fn lander_test() {
-    let lander = Lander::new();
-    println!("{:?}", lander)
+    let mut lander = Lander {
+        state: State::new(),
+    };
+    let dt = 0.01;
+    let mut t = 0.;
+    while t <= 10. {
+        physics::integrate(&mut lander.state, &Vector3::new(10., 10., 0.), 1., dt);
+        t += dt;
+        println!("{:} {:?}", t, lander);
+    }
 }
 
 fn joystick_test() {
