@@ -1,11 +1,25 @@
 extern crate gilrs;
+extern crate nalgebra as na;
 
+pub mod lander;
 pub mod simulator;
 
-use simulator::{Command, GCode};
 use gilrs::{Button, Event, EventType, Gilrs};
+use lander::Lander;
+use simulator::{Command, GCode};
+
 
 fn main() {
+    lander_test();
+    joystick_test();
+}
+
+fn lander_test() {
+    let lander = Lander::new();
+    println!("{:?}", lander)
+}
+
+fn joystick_test() {
     let mut gilrs = Gilrs::new().unwrap();
 
     if let Some((_id, gamepad)) = gilrs.gamepads().nth(0) {
@@ -19,7 +33,7 @@ fn main() {
             time: _,
         }) = gilrs.next_event()
         {
-            let control = match event {
+            if let Some(control) = match event {
                 EventType::ButtonReleased { 0: button, 1: _ } => match button {
                     Button::DPadDown => Some(Command::MoveTo {
                         x: None,
@@ -48,10 +62,8 @@ fn main() {
                     _ => None,
                 },
                 _ => None,
-            };
-            match control {
-                None => (),
-                Some(control) => println!("{}", control.to_gcode()),
+            } {
+                println!("{}", control.to_gcode())
             }
         }
     }

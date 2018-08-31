@@ -1,4 +1,4 @@
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub enum Command {
     MoveTo {
         x: Option<i32>,
