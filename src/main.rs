@@ -1,8 +1,8 @@
 extern crate gilrs;
 
-pub mod control;
+pub mod simulator;
 
-use control::{Control, GCode};
+use simulator::{Command, GCode};
 use gilrs::{Button, Event, EventType, Gilrs};
 
 fn main() {
@@ -21,25 +21,25 @@ fn main() {
         {
             let control = match event {
                 EventType::ButtonReleased { 0: button, 1: _ } => match button {
-                    Button::DPadDown => Some(Control::MoveTo {
+                    Button::DPadDown => Some(Command::MoveTo {
                         x: None,
                         y: Some(-10),
                         z: None,
                         f: None,
                     }),
-                    Button::DPadLeft => Some(Control::MoveTo {
+                    Button::DPadLeft => Some(Command::MoveTo {
                         x: Some(-10),
                         y: None,
                         z: None,
                         f: None,
                     }),
-                    Button::DPadRight => Some(Control::MoveTo {
+                    Button::DPadRight => Some(Command::MoveTo {
                         x: Some(10),
                         y: None,
                         z: None,
                         f: None,
                     }),
-                    Button::DPadUp => Some(Control::MoveTo {
+                    Button::DPadUp => Some(Command::MoveTo {
                         x: None,
                         y: Some(10),
                         z: None,

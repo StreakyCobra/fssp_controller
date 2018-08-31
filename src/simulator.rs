@@ -1,5 +1,5 @@
 #[derive(Clone, Debug)]
-pub enum Control {
+pub enum Command {
     MoveTo {
         x: Option<i32>,
         y: Option<i32>,
@@ -33,10 +33,10 @@ pub trait GCode {
     fn to_gcode(&self) -> String;
 }
 
-impl GCode for Control {
+impl GCode for Command {
     fn to_gcode(&self) -> String {
         match *self {
-            Control::MoveTo { x, y, z, f } => {
+            Command::MoveTo { x, y, z, f } => {
                 let mut params = String::new();
                 match x {
                     None => (),
@@ -55,9 +55,9 @@ impl GCode for Control {
                     Some(val) => format!("G1 {}f{}", params, val),
                 }
             },
-            Control::MoveToHome => format!("G28"),
-            Control::NoOp => format!(""),
-            Control::Pause { s, p } => {
+            Command::MoveToHome => format!("G28"),
+            Command::NoOp => format!(""),
+            Command::Pause { s, p } => {
                 let mut params = String::new();
                 match s {
                     None => (),
@@ -69,8 +69,8 @@ impl GCode for Control {
                 }
                 format!("G4 {}", params)
             },
-            Control::SetAbsolute => String::from("G90"),
-            Control::SetAttachPosition { n, x, y, z } => {
+            Command::SetAbsolute => String::from("G90"),
+            Command::SetAttachPosition { n, x, y, z } => {
                 let mut params = String::new();
                 params.push_str(&format!("x{} ", x));
                 params.push_str(&format!("y{} ", y));
@@ -83,7 +83,7 @@ impl GCode for Control {
                 };
                 format!("{} {}", code, params)
             },
-            Control::SetPosition { x, y, z, e } => {
+            Command::SetPosition { x, y, z, e } => {
                 let mut params = String::new();
                 match x {
                     None => (),
@@ -103,8 +103,8 @@ impl GCode for Control {
                 }
                 format!("G92 {}", params)
             },
-            Control::SetRelative => String::from("G91"),
-            Control::Shutdown => String::from("M00"),
+            Command::SetRelative => String::from("G91"),
+            Command::Shutdown => String::from("M00"),
         }
     }
 }
