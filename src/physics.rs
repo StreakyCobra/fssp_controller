@@ -4,8 +4,8 @@ type Num = f64;
 
 #[derive(Debug)]
 pub struct State {
-    position: Vector3<Num>,
-    velocity: Vector3<Num>,
+    pub position: Vector3<Num>,
+    pub velocity: Vector3<Num>,
 }
 
 impl State {
