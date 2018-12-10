@@ -1,8 +1,17 @@
-use gilrs::{Button, Event, EventType, Gilrs};
+use gilrs::{Event, EventType, Gilrs};
 
-use driver::{Command, GCode};
+use std::sync::mpsc;
+use std::thread;
 
-pub fn joystick_test() {
+pub fn start_controller() -> mpsc::Receiver<gilrs::Button> {
+    let (tx, rx) = mpsc::channel();
+
+    thread::spawn(move || listen(tx));
+
+    return rx;
+}
+
+fn listen(tx: mpsc::Sender<gilrs::Button>) {
     let mut gilrs = Gilrs::new().unwrap();
 
     if let Some((_id, gamepad)) = gilrs.gamepads().nth(0) {
@@ -10,43 +19,14 @@ pub fn joystick_test() {
     }
 
     loop {
-        while let Some(Event {
+        if let Some(Event {
             id: _,
             event,
             time: _,
         }) = gilrs.next_event()
         {
-            if let Some(control) = match event {
-                EventType::ButtonReleased { 0: button, 1: _ } => match button {
-                    Button::DPadDown => Some(Command::MoveTo {
-                        x: None,
-                        y: Some(-10),
-                        z: None,
-                        f: None,
-                    }),
-                    Button::DPadLeft => Some(Command::MoveTo {
-                        x: Some(-10),
-                        y: None,
-                        z: None,
-                        f: None,
-                    }),
-                    Button::DPadRight => Some(Command::MoveTo {
-                        x: Some(10),
-                        y: None,
-                        z: None,
-                        f: None,
-                    }),
-                    Button::DPadUp => Some(Command::MoveTo {
-                        x: None,
-                        y: Some(10),
-                        z: None,
-                        f: None,
-                    }),
-                    _ => None,
-                },
-                _ => None,
-            } {
-                println!("{}", control.to_gcode())
+            if let EventType::ButtonReleased { 0: button, 1: _ } = event {
+                tx.send(button).unwrap();
             }
         }
     }

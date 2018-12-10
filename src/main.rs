@@ -6,9 +6,9 @@ mod driver;
 mod physics;
 mod simulation;
 
-use controller::joystick_test;
+use controller::start_controller;
 use physics::State;
-use simulation::lander_test;
+use std::{thread, time};
 
 #[derive(Debug)]
 pub struct Lander {
@@ -16,6 +16,12 @@ pub struct Lander {
 }
 
 fn main() {
-    lander_test();
-    joystick_test();
+    let rx = start_controller();
+    let one_sec = time::Duration::from_secs(1);
+    loop {
+        for received in rx.try_iter() {
+            println!("{:?}", received);
+        }
+        thread::sleep(one_sec);
+    }
 }
