@@ -13,11 +13,6 @@ pub fn start_controller() -> mpsc::Receiver<gilrs::Button> {
 
 fn listen(tx: mpsc::Sender<gilrs::Button>) {
     let mut gilrs = Gilrs::new().unwrap();
-
-    if let Some((_id, gamepad)) = gilrs.gamepads().nth(0) {
-        println!("{}", gamepad.os_name())
-    }
-
     loop {
         if let Some(Event {
             id: _,

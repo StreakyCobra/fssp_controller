@@ -7,6 +7,8 @@ mod physics;
 mod simulation;
 
 use controller::start_controller;
+use driver::command::Command;
+use driver::connect_driver;
 use physics::State;
 use std::{thread, time};
 
@@ -16,11 +18,13 @@ pub struct Lander {
 }
 
 fn main() {
-    let rx = start_controller();
+    let controls = start_controller();
+    let commands = connect_driver("localhost:1234");
     let one_sec = time::Duration::from_secs(1);
     loop {
-        for received in rx.try_iter() {
+        for received in controls.try_iter() {
             println!("{:?}", received);
+            commands.send(Command::NoOp).unwrap();
         }
         thread::sleep(one_sec);
     }
