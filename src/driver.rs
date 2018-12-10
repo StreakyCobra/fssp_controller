@@ -1,4 +1,5 @@
 #[derive(Debug)]
+#[allow(dead_code)]
 pub enum Command {
     MoveTo {
         x: Option<i32>,
@@ -54,7 +55,7 @@ impl GCode for Command {
                     None => format!("G0 {}", params),
                     Some(val) => format!("G1 {}f{}", params, val),
                 }
-            },
+            }
             Command::MoveToHome => format!("G28"),
             Command::NoOp => format!(""),
             Command::Pause { s, p } => {
@@ -68,7 +69,7 @@ impl GCode for Command {
                     Some(val) => params.push_str(&format!("p{}", val)),
                 }
                 format!("G4 {}", params)
-            },
+            }
             Command::SetAbsolute => String::from("G90"),
             Command::SetAttachPosition { n, x, y, z } => {
                 let mut params = String::new();
@@ -79,10 +80,10 @@ impl GCode for Command {
                     1 => "M131",
                     2 => "M132",
                     3 => "M133",
-                    _ => panic!("Unsupported attach point number")
+                    _ => panic!("Unsupported attach point number"),
                 };
                 format!("{} {}", code, params)
-            },
+            }
             Command::SetPosition { x, y, z, e } => {
                 let mut params = String::new();
                 match x {
@@ -102,7 +103,7 @@ impl GCode for Command {
                     Some(val) => params.push_str(&format!("e{}", val)),
                 }
                 format!("G92 {}", params)
-            },
+            }
             Command::SetRelative => String::from("G91"),
             Command::Shutdown => String::from("M00"),
         }
