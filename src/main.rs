@@ -1,15 +1,18 @@
 extern crate gilrs;
 extern crate nalgebra as na;
 
-pub mod lander;
+pub mod driver;
 pub mod physics;
-pub mod simulator;
 
+use driver::command::{Command, GCode};
 use gilrs::{Button, Event, EventType, Gilrs};
-use lander::Lander;
 use na::Vector3;
 use physics::State;
-use simulator::{Command, GCode};
+
+#[derive(Debug)]
+pub struct Lander {
+    pub state: State,
+}
 
 fn main() {
     lander_test();
