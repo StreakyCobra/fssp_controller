@@ -24,7 +24,9 @@ fn main() {
     loop {
         for received in controls.try_iter() {
             println!("{:?}", received);
-            commands.send(Command::NoOp).unwrap();
+            if let Some(tx) = &commands {
+                tx.send(Command::NoOp).unwrap();
+            }
         }
         thread::sleep(one_sec);
     }
