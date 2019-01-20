@@ -6,7 +6,7 @@ mod driver;
 mod physics;
 mod simulation;
 
-use controller::start_controller;
+use controller::connect_controller;
 use driver::command::Command;
 use driver::connect_driver;
 use physics::State;
@@ -18,8 +18,8 @@ pub struct Lander {
 }
 
 fn main() {
-    let controls = start_controller();
-    let commands = connect_driver("localhost:1234");
+    let controls = connect_controller();
+    let commands = connect_driver("localhost:16000");
     let one_sec = time::Duration::from_secs(1);
     loop {
         for received in controls.try_iter() {

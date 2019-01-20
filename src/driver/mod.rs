@@ -18,16 +18,14 @@ pub fn connect_driver(address: &str) -> Option<mpsc::Sender<Command>> {
 }
 
 fn emit(mut stream: TcpStream, rx: mpsc::Receiver<Command>) {
+    let one_sec = time::Duration::from_secs(1);
     loop {
-        let one_sec = time::Duration::from_secs(1);
-        loop {
-            for received in rx.try_iter() {
-                println!("{:?}", received);
-                stream
-                    .write(format!("{:?}\n", received).as_bytes())
-                    .unwrap();
-            }
-            thread::sleep(one_sec);
+        for received in rx.try_iter() {
+            println!("{:?}", received);
+            stream
+                .write(format!("{:?}\n", received).as_bytes())
+                .unwrap();
         }
+        thread::sleep(one_sec);
     }
 }

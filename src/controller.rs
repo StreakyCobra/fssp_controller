@@ -3,7 +3,7 @@ use gilrs::{Event, EventType, Gilrs};
 use std::sync::mpsc;
 use std::thread;
 
-pub fn start_controller() -> mpsc::Receiver<gilrs::Button> {
+pub fn connect_controller() -> mpsc::Receiver<gilrs::Button> {
     let (tx, rx) = mpsc::channel();
 
     thread::spawn(move || listen(tx));
