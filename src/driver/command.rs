@@ -41,19 +41,19 @@ impl GCode for Command {
                 let mut params = String::new();
                 match x {
                     None => (),
-                    Some(val) => params.push_str(&format!("x{} ", val)),
+                    Some(val) => params.push_str(&format!("X{} ", val)),
                 }
                 match y {
                     None => (),
-                    Some(val) => params.push_str(&format!("y{} ", val)),
+                    Some(val) => params.push_str(&format!("Y{} ", val)),
                 }
                 match z {
                     None => (),
-                    Some(val) => params.push_str(&format!("z{} ", val)),
+                    Some(val) => params.push_str(&format!("Z{} ", val)),
                 }
                 match f {
                     None => format!("G0 {}", params),
-                    Some(val) => format!("G1 {}f{}", params, val),
+                    Some(val) => format!("G1 {}F{}", params, val),
                 }
             }
             Command::MoveToHome => format!("G28"),
@@ -62,20 +62,20 @@ impl GCode for Command {
                 let mut params = String::new();
                 match s {
                     None => (),
-                    Some(val) => params.push_str(&format!("s{}", val)),
+                    Some(val) => params.push_str(&format!("S{}", val)),
                 }
                 match p {
                     None => (),
-                    Some(val) => params.push_str(&format!("p{}", val)),
+                    Some(val) => params.push_str(&format!("P{}", val)),
                 }
                 format!("G4 {}", params)
             }
             Command::SetAbsolute => String::from("G90"),
             Command::SetAttachPosition { n, x, y, z } => {
                 let mut params = String::new();
-                params.push_str(&format!("x{} ", x));
-                params.push_str(&format!("y{} ", y));
-                params.push_str(&format!("z{} ", z));
+                params.push_str(&format!("X{} ", x));
+                params.push_str(&format!("Y{} ", y));
+                params.push_str(&format!("Z{} ", z));
                 let code = match n {
                     1 => "M131",
                     2 => "M132",
@@ -88,19 +88,19 @@ impl GCode for Command {
                 let mut params = String::new();
                 match x {
                     None => (),
-                    Some(val) => params.push_str(&format!("x{} ", val)),
+                    Some(val) => params.push_str(&format!("X{} ", val)),
                 }
                 match y {
                     None => (),
-                    Some(val) => params.push_str(&format!("y{} ", val)),
+                    Some(val) => params.push_str(&format!("Y{} ", val)),
                 }
                 match z {
                     None => (),
-                    Some(val) => params.push_str(&format!("z{} ", val)),
+                    Some(val) => params.push_str(&format!("Z{} ", val)),
                 }
                 match e {
                     None => (),
-                    Some(val) => params.push_str(&format!("e{}", val)),
+                    Some(val) => params.push_str(&format!("E{}", val)),
                 }
                 format!("G92 {}", params)
             }
