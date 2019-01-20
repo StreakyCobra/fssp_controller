@@ -19,12 +19,14 @@ pub fn connect_driver(address: &str) -> Option<mpsc::Sender<Command>> {
 
 fn emit(mut stream: TcpStream, rx: mpsc::Receiver<Command>) {
     let wait_duration = time::Duration::from_millis(100);
+    stream.set_nodelay(true).unwrap();
     loop {
         for received in rx.try_iter() {
             println!("{:?}", received);
             stream
                 .write(format!("{}\n", received.to_gcode()).as_bytes())
                 .unwrap();
+            stream.flush().unwrap();
         }
         thread::sleep(wait_duration);
     }
