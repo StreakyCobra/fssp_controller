@@ -1,9 +1,12 @@
+mod manual;
+
 use driver::command::Command;
 use gilrs::Button;
 use sensor::event::Event;
 use std::sync::mpsc;
 use std::{thread, time};
 
+#[derive(Debug)]
 pub enum Mode {
     Manual,
     Calibration,
@@ -21,17 +24,24 @@ impl Mode {
 }
 
 pub fn master_loop(
-    controls: mpsc::Receiver<gilrs::Button>,
+    controls: mpsc::Receiver<Button>,
     commands: Option<mpsc::Sender<Command>>,
     events: Option<mpsc::Receiver<Event>>,
 ) {
-    let mut current: Mode = Mode::Manual;
+    let mut mode: Mode = Mode::Manual;
     let wait_duration = time::Duration::from_millis(100);
     loop {
         for button in controls.try_iter() {
-            println!("{:?}", button);
             if let Button::Mode = button {
-                current = current.next();
+                next_mode(&mut mode);
+            } else {
+                match mode {
+                    Mode::Manual => {
+                        manual::handle(button, &commands);
+                    }
+                    Mode::Calibration => println!("Not supported yet"),
+                    Mode::Simulation => println!("Not supported yet"),
+                };
             }
         }
         if let Some(rx) = &events {
@@ -39,15 +49,11 @@ pub fn master_loop(
                 println!("{:?}", event)
             }
         }
-        if let Some(tx) = &commands {
-            tx.send(Command::MoveTo {
-                x: Some(10),
-                y: None,
-                z: None,
-                f: None,
-            })
-            .unwrap();
-        }
         thread::sleep(wait_duration);
     }
+}
+
+fn next_mode(mode: &mut Mode) {
+    *mode = mode.next();
+    println!("{:?}", mode);
 }
