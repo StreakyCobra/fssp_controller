@@ -22,8 +22,8 @@ fn main() {
     let commands = connect_driver("localhost:16000");
     let one_sec = time::Duration::from_secs(1);
     loop {
-        for received in controls.try_iter() {
-            println!("{:?}", received);
+        for command in controls.try_iter() {
+            println!("{:?}", command);
             if let Some(tx) = &commands {
                 tx.send(Command::NoOp).unwrap();
             }
