@@ -1,4 +1,4 @@
-use driver::command::Command;
+use driver::command::{Command, GCode};
 use std::io::prelude::*;
 use std::net::TcpStream;
 use std::sync::mpsc;
@@ -18,14 +18,14 @@ pub fn connect_driver(address: &str) -> Option<mpsc::Sender<Command>> {
 }
 
 fn emit(mut stream: TcpStream, rx: mpsc::Receiver<Command>) {
-    let one_sec = time::Duration::from_secs(1);
+    let wait_duration = time::Duration::from_millis(100);
     loop {
         for received in rx.try_iter() {
             println!("{:?}", received);
             stream
-                .write(format!("{:?}\n", received).as_bytes())
+                .write(format!("{}\n", received.to_gcode()).as_bytes())
                 .unwrap();
         }
-        thread::sleep(one_sec);
+        thread::sleep(wait_duration);
     }
 }
