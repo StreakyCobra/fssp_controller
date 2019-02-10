@@ -18,7 +18,7 @@ pub fn connect_sensor(address: &str) -> Option<mpsc::Receiver<Event>> {
 }
 
 fn emit(stream: TcpStream, tx: mpsc::Sender<Event>) {
-    let one_sec = time::Duration::from_secs(1);
+    let wait_duration = time::Duration::from_millis(100);
     let mut buf = BufReader::new(stream);
     let mut line: String = String::new();
     loop {
@@ -32,6 +32,6 @@ fn emit(stream: TcpStream, tx: mpsc::Sender<Event>) {
             .unwrap();
             line.clear();
         }
-        thread::sleep(one_sec);
+        thread::sleep(wait_duration);
     }
 }
