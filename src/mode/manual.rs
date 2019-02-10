@@ -16,6 +16,13 @@ pub fn handle(control: Control, commands: &Option<mpsc::Sender<Command>>) {
         } = control;
         if let gilrs::EventType::ButtonReleased { 0: button, 1: _ } = event {
             handle_button(button, &tx)
+        } else if let gilrs::EventType::AxisChanged {
+            0: axis,
+            1: value,
+            2: _,
+        } = event
+        {
+            handle_axis(axis, value, &tx)
         }
     }
 }
@@ -67,6 +74,36 @@ fn handle_button(button: Button, tx: &mpsc::Sender<Command>) {
                 x: None,
                 y: None,
                 z: Some(-10),
+                f: None,
+            })
+            .unwrap(),
+        _ => (),
+    }
+}
+
+fn handle_axis(axis: gilrs::Axis, value: f32, tx: &mpsc::Sender<Command>) {
+    match axis {
+        gilrs::Axis::LeftStickX => tx
+            .send(Command::MoveTo {
+                x: Some((value * 100.) as i32),
+                y: None,
+                z: None,
+                f: None,
+            })
+            .unwrap(),
+        gilrs::Axis::LeftStickY => tx
+            .send(Command::MoveTo {
+                x: None,
+                y: Some((value * 100.) as i32),
+                z: None,
+                f: None,
+            })
+            .unwrap(),
+        gilrs::Axis::RightStickY => tx
+            .send(Command::MoveTo {
+                x: None,
+                y: None,
+                z: Some((value * 100.) as i32),
                 f: None,
             })
             .unwrap(),
