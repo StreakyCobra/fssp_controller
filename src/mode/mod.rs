@@ -44,20 +44,10 @@ fn handle_controls(
     commands: &mpsc::Sender<Command>,
 ) {
     for control in controls.try_iter() {
-        // Check if it is the Mode button to change mode here
-        if let Control::Joystick {
-            event:
-                gilrs::Event {
-                    id: _,
-                    event: gilrs::EventType::ButtonReleased { 0: button, 1: _ },
-                    time: _,
-                },
-        } = control
-        {
-            if button == gilrs::Button::Mode {
-                next_mode(mode);
-                continue;
-            }
+        // Handle mode change trigger
+        if is_mode_trigger(&control) {
+            next_mode(mode);
+            continue;
         }
 
         // Dispatch the controls to the active mode
@@ -78,6 +68,21 @@ fn handle_events(
 ) {
     for event in events.try_iter() {
         println!("{:?}", event)
+    }
+}
+
+fn is_mode_trigger(control: &Control) -> bool {
+    match *control {
+        Control::Joystick {
+            event:
+                gilrs::Event {
+                    id: _,
+                    event: gilrs::EventType::ButtonReleased { 0: button, 1: _ },
+                    time: _,
+                },
+        } => return button == gilrs::Button::Mode,
+        Control::Keyboard { keycode } => return keycode == 'm' as i32,
+        _ => return false,
     }
 }
 
