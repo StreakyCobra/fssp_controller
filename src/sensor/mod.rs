@@ -6,15 +6,14 @@ use std::{thread, time};
 
 pub mod event;
 
-pub fn connect_sensor(address: &str) -> Option<mpsc::Receiver<Event>> {
+pub fn connect_sensor(address: &str) -> mpsc::Receiver<Event> {
     let (tx, rx) = mpsc::channel();
+
     if let Some(stream) = TcpStream::connect(address).ok() {
         thread::spawn(move || emit(stream, tx));
-
-        return Some(rx);
     };
 
-    return None;
+    return rx;
 }
 
 fn emit(stream: TcpStream, tx: mpsc::Sender<Event>) {

@@ -6,15 +6,14 @@ use std::{thread, time};
 
 pub mod command;
 
-pub fn connect_driver(address: &str) -> Option<mpsc::Sender<Command>> {
+pub fn connect_driver(address: &str) -> mpsc::Sender<Command> {
     let (tx, rx) = mpsc::channel();
+
     if let Some(stream) = TcpStream::connect(address).ok() {
         thread::spawn(move || emit(stream, rx));
-
-        return Some(tx);
     };
 
-    return None;
+    return tx;
 }
 
 fn emit(mut stream: TcpStream, rx: mpsc::Receiver<Command>) {

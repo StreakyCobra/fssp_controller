@@ -26,8 +26,8 @@ impl Mode {
 
 pub fn master_loop(
     controls: mpsc::Receiver<Control>,
-    commands: Option<mpsc::Sender<Command>>,
-    events: Option<mpsc::Receiver<Event>>,
+    commands: mpsc::Sender<Command>,
+    events: mpsc::Receiver<Event>,
 ) {
     let mut mode: Mode = Mode::Manual;
     let wait_duration = time::Duration::from_millis(100);
@@ -41,7 +41,7 @@ pub fn master_loop(
 fn handle_controls(
     controls: &mpsc::Receiver<Control>,
     mode: &mut Mode,
-    commands: &Option<mpsc::Sender<Command>>,
+    commands: &mpsc::Sender<Command>,
 ) {
     for control in controls.try_iter() {
         // Check if it is the Mode button to change mode here
@@ -72,14 +72,12 @@ fn handle_controls(
 }
 
 fn handle_events(
-    events: &Option<mpsc::Receiver<Event>>,
+    events: &mpsc::Receiver<Event>,
     _mode: &mut Mode,
-    _commands: &Option<mpsc::Sender<Command>>,
+    _commands: &mpsc::Sender<Command>,
 ) {
-    if let Some(rx) = &events {
-        for event in rx.try_iter() {
-            println!("{:?}", event)
-        }
+    for event in events.try_iter() {
+        println!("{:?}", event)
     }
 }
 

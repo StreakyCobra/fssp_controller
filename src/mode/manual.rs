@@ -4,32 +4,28 @@ use gilrs;
 use gilrs::Button;
 use std::sync::mpsc;
 
-pub fn handle(control: Control, commands: &Option<mpsc::Sender<Command>>) {
-    if let Some(tx) = commands {
-        match control {
-            Control::Joystick {
-                event:
-                    gilrs::Event {
-                        id: _,
-                        event,
-                        time: _,
-                    },
-            } => {
-                if let gilrs::EventType::ButtonReleased { 0: button, 1: _ } = event {
-                    handle_button(button, &tx)
-                } else if let gilrs::EventType::AxisChanged {
-                    0: axis,
-                    1: value,
-                    2: _,
-                } = event
-                {
-                    handle_axis(axis, value, &tx)
-                }
+pub fn handle(control: Control, commands: &mpsc::Sender<Command>) {
+    match control {
+        Control::Joystick {
+            event:
+                gilrs::Event {
+                    id: _,
+                    event,
+                    time: _,
+                },
+        } => {
+            if let gilrs::EventType::ButtonReleased { 0: button, 1: _ } = event {
+                handle_button(button, &commands)
+            } else if let gilrs::EventType::AxisChanged {
+                0: axis,
+                1: value,
+                2: _,
+            } = event
+            {
+                handle_axis(axis, value, &commands)
             }
-            Control::Keyboard { keycode } => {
-                println!("Key press: {}", keycode as u8 as char)
-            },
         }
+        Control::Keyboard { keycode } => println!("Key press: {}", keycode as u8 as char),
     }
 }
 
