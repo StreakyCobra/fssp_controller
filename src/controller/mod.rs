@@ -1,5 +1,6 @@
 use controller::control::Control;
 use gilrs::Gilrs;
+use ncurses;
 use std::sync::mpsc;
 use std::thread;
 
@@ -18,6 +19,10 @@ fn listen(tx: mpsc::Sender<Control>) {
     loop {
         if let Some(event) = gilrs.next_event() {
             tx.send(Control::Joystick { event: event }).unwrap();
+        }
+        let ch = ncurses::getch();
+        if ch != -1 {
+            tx.send(Control::Keyboard { keycode: ch }).unwrap();
         }
     }
 }

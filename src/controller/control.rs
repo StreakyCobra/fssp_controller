@@ -4,4 +4,5 @@ use gilrs::Event;
 #[derive(Debug)]
 pub enum Control {
     Joystick { event: Event },
+    Keyboard { keycode: i32 },
 }

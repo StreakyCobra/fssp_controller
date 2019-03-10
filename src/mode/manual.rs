@@ -6,23 +6,29 @@ use std::sync::mpsc;
 
 pub fn handle(control: Control, commands: &Option<mpsc::Sender<Command>>) {
     if let Some(tx) = commands {
-        let Control::Joystick {
-            event:
-                gilrs::Event {
-                    id: _,
-                    event: event,
-                    time: _,
-                },
-        } = control;
-        if let gilrs::EventType::ButtonReleased { 0: button, 1: _ } = event {
-            handle_button(button, &tx)
-        } else if let gilrs::EventType::AxisChanged {
-            0: axis,
-            1: value,
-            2: _,
-        } = event
-        {
-            handle_axis(axis, value, &tx)
+        match control {
+            Control::Joystick {
+                event:
+                    gilrs::Event {
+                        id: _,
+                        event,
+                        time: _,
+                    },
+            } => {
+                if let gilrs::EventType::ButtonReleased { 0: button, 1: _ } = event {
+                    handle_button(button, &tx)
+                } else if let gilrs::EventType::AxisChanged {
+                    0: axis,
+                    1: value,
+                    2: _,
+                } = event
+                {
+                    handle_axis(axis, value, &tx)
+                }
+            }
+            Control::Keyboard { keycode } => {
+                println!("Key press: {}", keycode as u8 as char)
+            },
         }
     }
 }

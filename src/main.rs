@@ -1,5 +1,6 @@
 extern crate gilrs;
 extern crate nalgebra as na;
+extern crate ncurses;
 
 mod controller;
 mod driver;
@@ -18,5 +19,18 @@ fn main() {
     let commands = connect_driver("geneKranz.local:16000");
     let events = connect_sensor("geneKranz.local:16001");
 
+    init_ncurses();
     master_loop(controls, commands, events);
+    close_ncurses();
+}
+
+fn init_ncurses() {
+    let windows = ncurses::initscr();
+    ncurses::refresh();
+    ncurses::nodelay(windows, true);
+    ncurses::noecho();
+}
+
+fn close_ncurses() {
+    ncurses::endwin();
 }
