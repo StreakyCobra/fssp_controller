@@ -4,7 +4,8 @@ use gilrs;
 use gilrs::Button;
 use std::sync::mpsc;
 
-pub fn handle(control: Control, commands: &mpsc::Sender<Command>) {
+pub fn handle(control: Control, driver: &mpsc::Sender<Command>) {
+    check_handler(driver);
     match control {
         Control::Joystick {
             event:
@@ -15,14 +16,14 @@ pub fn handle(control: Control, commands: &mpsc::Sender<Command>) {
                 },
         } => {
             if let gilrs::EventType::ButtonReleased { 0: button, 1: _ } = event {
-                handle_button(button, &commands)
+                handle_button(button, &driver)
             } else if let gilrs::EventType::AxisChanged {
                 0: axis,
                 1: value,
                 2: _,
             } = event
             {
-                handle_axis(axis, value, &commands)
+                handle_axis(axis, value, &driver)
             }
         }
         Control::Keyboard { keycode } => println!("Key press: {}\r", keycode as u8 as char),

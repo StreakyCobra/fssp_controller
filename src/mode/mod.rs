@@ -25,27 +25,27 @@ impl Mode {
 }
 
 pub fn master_loop(
-    controls: mpsc::Receiver<Control>,
-    commands: mpsc::Sender<Command>,
-    events: mpsc::Receiver<Event>,
+    controller: mpsc::Receiver<Control>,
+    driver: mpsc::Sender<Command>,
+    sensor: mpsc::Receiver<Event>,
 ) {
     let mut mode: Mode = Mode::Manual;
     let wait_duration = time::Duration::from_millis(100);
     loop {
-        if !handle_controls(&controls, &mut mode, &commands) {
+        if !handle_controls(&controller, &mut mode, &driver) {
             break;
         };
-        handle_events(&events, &mut mode, &commands);
+        handle_events(&sensor, &mut mode, &driver);
         thread::sleep(wait_duration);
     }
 }
 
 fn handle_controls(
-    controls: &mpsc::Receiver<Control>,
+    controller: &mpsc::Receiver<Control>,
     mode: &mut Mode,
-    commands: &mpsc::Sender<Command>,
+    driver: &mpsc::Sender<Command>,
 ) -> bool {
-    for control in controls.try_iter() {
+    for control in controller.try_iter() {
         // Handle quit trigger
         if is_quit_trigger(&control) {
             return false;
@@ -60,7 +60,7 @@ fn handle_controls(
         // Dispatch the controls to the active mode
         match mode {
             Mode::Manual => {
-                manual::handle(control, &commands);
+                manual::handle(control, &driver);
             }
             Mode::Calibration => {
                 println!("Not supported yet\r");
@@ -76,7 +76,7 @@ fn handle_controls(
 fn handle_events(
     events: &mpsc::Receiver<Event>,
     _mode: &mut Mode,
-    _commands: &mpsc::Sender<Command>,
+    _driver: &mpsc::Sender<Command>,
 ) {
     for event in events.try_iter() {
         println!("{:?}\r", event)

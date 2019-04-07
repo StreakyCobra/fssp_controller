@@ -15,12 +15,12 @@ use mode::master_loop;
 use sensor::connect_sensor;
 
 fn main() {
-    let controls = connect_controller();
-    let commands = connect_driver("geneKranz.local:16000");
-    let events = connect_sensor("geneKranz.local:16001");
+    let controller = connect_controller();
+    let driver = connect_driver("localhost:16000");
+    let sensor = connect_sensor("localhost:16001");
 
     init_ncurses();
-    master_loop(controls, commands, events);
+    master_loop(controller, driver, sensor);
     close_ncurses();
 }
 
