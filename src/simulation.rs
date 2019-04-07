@@ -17,6 +17,6 @@ pub fn lander_test() {
     while t <= 10. {
         physics::integrate(&mut lander.state, &Vector3::new(10., 10., 0.), 1., dt);
         t += dt;
-        println!("{:} {:?}", t, lander);
+        println!("{:} {:?}\r", t, lander);
     }
 }

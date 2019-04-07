@@ -6,6 +6,7 @@ use gilrs;
 use sensor::event::Event;
 use std::sync::mpsc;
 use std::{thread, time};
+use ncurses;
 
 #[derive(Debug)]
 pub enum Mode {
@@ -67,7 +68,7 @@ fn handle_events(
     _commands: &mpsc::Sender<Command>,
 ) {
     for event in events.try_iter() {
-        println!("{:?}", event)
+        println!("{:?}\r", event)
     }
 }
 
@@ -88,5 +89,5 @@ fn is_mode_trigger(control: &Control) -> bool {
 
 fn next_mode(mode: &mut Mode) {
     *mode = mode.next();
-    println!("{:?}", mode);
+    println!("{:?}\r", mode);
 }

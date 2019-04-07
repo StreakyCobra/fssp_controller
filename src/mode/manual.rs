@@ -25,7 +25,7 @@ pub fn handle(control: Control, commands: &mpsc::Sender<Command>) {
                 handle_axis(axis, value, &commands)
             }
         }
-        Control::Keyboard { keycode } => println!("Key press: {}", keycode as u8 as char),
+        Control::Keyboard { keycode } => println!("Key press: {}\r", keycode as u8 as char),
     }
 }
 

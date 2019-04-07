@@ -25,7 +25,7 @@ fn emit(mut stream: TcpStream, rx: mpsc::Receiver<Command>) {
     stream.set_nodelay(true).unwrap();
     loop {
         for received in rx.try_iter() {
-            println!("{:?}", received);
+            println!("{:?}\r", received);
             stream
                 .write(format!("{}\n", received.to_gcode()).as_bytes())
                 .unwrap();
@@ -39,7 +39,7 @@ fn dummy(rx: mpsc::Receiver<Command>) {
     let wait_duration = time::Duration::from_millis(WAIT_DURATION_MS);
     loop {
         for received in rx.try_iter() {
-            println!("{:?}", received);
+            println!("{:?}\r", received);
         }
         thread::sleep(wait_duration);
     }

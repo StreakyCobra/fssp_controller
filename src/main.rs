@@ -26,9 +26,9 @@ fn main() {
 
 fn init_ncurses() {
     let windows = ncurses::initscr();
-    ncurses::refresh();
     ncurses::nodelay(windows, true);
     ncurses::noecho();
+    ncurses::refresh();
 }
 
 fn close_ncurses() {
