@@ -5,7 +5,6 @@ use gilrs::Button;
 use std::sync::mpsc;
 
 pub fn handle(control: Control, driver: &mpsc::Sender<Command>) {
-    check_handler(driver);
     match control {
         Control::Joystick {
             event:
