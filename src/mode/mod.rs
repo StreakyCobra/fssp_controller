@@ -6,7 +6,6 @@ use gilrs;
 use sensor::event::Event;
 use std::sync::mpsc;
 use std::{thread, time};
-use ncurses;
 
 #[derive(Debug)]
 pub enum Mode {
