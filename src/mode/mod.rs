@@ -1,5 +1,5 @@
-mod manual;
 mod calibration;
+mod manual;
 mod simulation;
 
 use controller::control::Control;
@@ -15,8 +15,9 @@ trait Mode {
     where
         Self: Sized;
     fn name(&self) -> String;
+    fn stop(&mut self);
     fn next_mode(&self) -> Box<Mode>;
-    fn handle(&self, control: Control, driver: &mpsc::Sender<Command>);
+    fn handle(&mut self, control: Control);
 }
 
 pub fn master_loop(
@@ -29,7 +30,7 @@ pub fn master_loop(
     println!(":: Mode: {}\r", mode.name());
     let wait_duration = time::Duration::from_millis(100);
     loop {
-        if !handle_controls(&controller, &mut mode, &driver) {
+        if !handle_controls(&controller, &mut mode) {
             break;
         };
         handle_events(&sensor, &mut mode, &driver);
@@ -37,11 +38,7 @@ pub fn master_loop(
     }
 }
 
-fn handle_controls(
-    controller: &mpsc::Receiver<Control>,
-    mode: &mut Box<Mode>,
-    driver: &mpsc::Sender<Command>,
-) -> bool {
+fn handle_controls(controller: &mpsc::Receiver<Control>, mode: &mut Box<Mode>) -> bool {
     for control in controller.try_iter() {
         // Handle quit trigger
         if is_quit_trigger(&control) {
@@ -54,12 +51,13 @@ fn handle_controls(
             continue;
         }
 
-        mode.handle(control, &driver);
+        mode.handle(control);
     }
     return true;
 }
 
 fn next_mode(mode: &mut Box<Mode>) {
+    mode.stop();
     *mode = mode.next_mode();
     println!(":: Mode: {}\r", mode.name());
 }

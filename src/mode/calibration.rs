@@ -19,6 +19,8 @@ impl Mode for Calibration {
         }
     }
 
+    fn stop(&mut self) {}
+
     fn name(&self) -> String {
         String::from("Simulation")
     }
@@ -27,7 +29,7 @@ impl Mode for Calibration {
         Box::new(Manual::init(&self.driver))
     }
 
-    fn handle(&self, control: Control, driver: &mpsc::Sender<Command>) {
+    fn handle(&mut self, control: Control) {
         match control {
             Control::Joystick {
                 event:
@@ -38,34 +40,31 @@ impl Mode for Calibration {
                     },
             } => {
                 if let gilrs::EventType::ButtonReleased { 0: button, 1: _ } = event {
-                    self.handle_button(button, &driver)
+                    self.handle_button(button)
                 } else if let gilrs::EventType::AxisChanged {
                     0: axis,
                     1: value,
                     2: _,
                 } = event
                 {
-                    self.handle_axis(axis, value, &driver)
+                    self.handle_axis(axis, value)
                 }
             }
-            Control::Keyboard { keycode } => self.handle_key(keycode, &driver),
+            Control::Keyboard { keycode } => self.handle_key(keycode),
         }
     }
 }
 
 impl Calibration {
-    fn handle_button(&self, button: Button, tx: &mpsc::Sender<Command>) {
+    fn handle_button(&self, button: Button) {
         println!("Button press: {:?}\r", button);
-        tx.send(Command::NoOp).unwrap();
     }
 
-    fn handle_axis(&self, axis: gilrs::Axis, value: f32, tx: &mpsc::Sender<Command>) {
+    fn handle_axis(&self, axis: gilrs::Axis, value: f32) {
         println!("Axis changed: {:?} {}\r", axis, value);
-        tx.send(Command::NoOp).unwrap();
     }
 
-    fn handle_key(&self, keycode: i32, tx: &mpsc::Sender<Command>) {
+    fn handle_key(&self, keycode: i32) {
         println!("Key press: {}\r", keycode as u8 as char);
-        tx.send(Command::NoOp).unwrap();
     }
 }
