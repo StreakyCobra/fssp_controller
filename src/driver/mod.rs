@@ -39,6 +39,7 @@ fn dummy(rx: mpsc::Receiver<Command>) {
     let wait_duration = time::Duration::from_millis(WAIT_DURATION_MS);
     loop {
         for received in rx.try_iter() {
+            if received == Command::NoOp { continue }
             println!("{:?}\r", received);
         }
         thread::sleep(wait_duration);
