@@ -3,6 +3,7 @@ use driver::command::Command;
 use gilrs;
 use gilrs::Button;
 use mode::Mode;
+use mode::calibration::Calibration;
 use std::sync::mpsc;
 
 #[derive(Debug)]
@@ -23,7 +24,7 @@ impl Mode for Manual {
     }
 
     fn next_mode(&self) -> Box<Mode> {
-        Box::new(Manual::init(&self.driver))
+        Box::new(Calibration::init(&self.driver))
     }
 
     fn handle(&self, control: Control, driver: &mpsc::Sender<Command>) {

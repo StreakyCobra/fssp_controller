@@ -1,4 +1,6 @@
 mod manual;
+mod calibration;
+mod simulation;
 
 use controller::control::Control;
 use driver::command::Command;
