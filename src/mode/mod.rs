@@ -6,22 +6,13 @@ use gilrs;
 use sensor::event::Event;
 use std::sync::mpsc;
 use std::{thread, time};
+use mode::manual::Manual;
 
-#[derive(Debug)]
-pub enum Mode {
-    Manual,
-    Calibration,
-    Simulation,
-}
-
-impl Mode {
-    pub fn next(&self) -> Mode {
-        match self {
-            Mode::Manual => Mode::Calibration,
-            Mode::Calibration => Mode::Simulation,
-            Mode::Simulation => Mode::Manual,
-        }
-    }
+trait Mode {
+    fn init() -> Self where Self: Sized;
+    fn name(&self) -> String;
+    fn next_mode(&self) -> Box<Mode>;
+    fn handle(&self, control: Control, driver: &mpsc::Sender<Command>);
 }
 
 pub fn master_loop(
@@ -29,7 +20,7 @@ pub fn master_loop(
     driver: mpsc::Sender<Command>,
     sensor: mpsc::Receiver<Event>,
 ) {
-    let mut mode: Mode = Mode::Manual;
+    let mut mode: Box<Mode> = Box::new(Manual::init());
     let wait_duration = time::Duration::from_millis(100);
     loop {
         if !handle_controls(&controller, &mut mode, &driver) {
@@ -42,7 +33,7 @@ pub fn master_loop(
 
 fn handle_controls(
     controller: &mpsc::Receiver<Control>,
-    mode: &mut Mode,
+    mode: &mut Box<Mode>,
     driver: &mpsc::Sender<Command>,
 ) -> bool {
     for control in controller.try_iter() {
@@ -57,25 +48,19 @@ fn handle_controls(
             continue;
         }
 
-        // Dispatch the controls to the active mode
-        match mode {
-            Mode::Manual => {
-                manual::handle(control, &driver);
-            }
-            Mode::Calibration => {
-                println!("Not supported yet\r");
-            }
-            Mode::Simulation => {
-                println!("Not supported yet\r");
-            }
-        };
+        mode.handle(control, &driver);
     }
     return true;
 }
 
+fn next_mode(mode: &mut Box<Mode>) {
+    *mode = mode.next_mode();
+    println!("{}\r", mode.name());
+}
+
 fn handle_events(
     events: &mpsc::Receiver<Event>,
-    _mode: &mut Mode,
+    _mode: &mut Box<Mode>,
     _driver: &mpsc::Sender<Command>,
 ) {
     for event in events.try_iter() {
@@ -111,9 +96,4 @@ fn is_quit_trigger(control: &Control) -> bool {
         Control::Keyboard { keycode } => return keycode == 'q' as i32,
         _ => return false,
     }
-}
-
-fn next_mode(mode: &mut Mode) {
-    *mode = mode.next();
-    println!("{:?}\r", mode);
 }
