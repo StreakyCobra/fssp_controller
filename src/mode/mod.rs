@@ -25,6 +25,8 @@ pub fn master_loop(
     sensor: mpsc::Receiver<Event>,
 ) {
     let mut mode: Box<Mode> = Box::new(Manual::init(&driver));
+    println!(":: Welcome to FSSP\r");
+    println!(":: Mode: {}\r", mode.name());
     let wait_duration = time::Duration::from_millis(100);
     loop {
         if !handle_controls(&controller, &mut mode, &driver) {
@@ -59,7 +61,7 @@ fn handle_controls(
 
 fn next_mode(mode: &mut Box<Mode>) {
     *mode = mode.next_mode();
-    println!("{}\r", mode.name());
+    println!(":: Mode: {}\r", mode.name());
 }
 
 fn handle_events(
