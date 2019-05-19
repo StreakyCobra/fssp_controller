@@ -2,15 +2,20 @@ use controller::control::Control;
 use driver::command::Command;
 use gilrs;
 use gilrs::Button;
+use mode::Mode;
 use std::sync::mpsc;
 
-use mode::Mode;
-
-pub struct Manual {}
+#[derive(Debug)]
+pub struct Manual {
+    driver: mpsc::Sender<Command>,
+}
 
 impl Mode for Manual {
-    fn init() -> Self {
-        Manual {}
+    fn init(driver: &mpsc::Sender<Command>) -> Self {
+        driver.send(Command::SetRelative).unwrap();
+        Manual {
+            driver: driver.clone(),
+        }
     }
 
     fn name(&self) -> String {
@@ -18,7 +23,7 @@ impl Mode for Manual {
     }
 
     fn next_mode(&self) -> Box<Mode> {
-        Box::new(Manual::init())
+        Box::new(Manual::init(&self.driver))
     }
 
     fn handle(&self, control: Control, driver: &mpsc::Sender<Command>) {

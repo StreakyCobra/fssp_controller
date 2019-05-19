@@ -3,13 +3,15 @@ mod manual;
 use controller::control::Control;
 use driver::command::Command;
 use gilrs;
+use mode::manual::Manual;
 use sensor::event::Event;
 use std::sync::mpsc;
 use std::{thread, time};
-use mode::manual::Manual;
 
 trait Mode {
-    fn init() -> Self where Self: Sized;
+    fn init(driver: &mpsc::Sender<Command>) -> Self
+    where
+        Self: Sized;
     fn name(&self) -> String;
     fn next_mode(&self) -> Box<Mode>;
     fn handle(&self, control: Control, driver: &mpsc::Sender<Command>);
@@ -20,7 +22,7 @@ pub fn master_loop(
     driver: mpsc::Sender<Command>,
     sensor: mpsc::Receiver<Event>,
 ) {
-    let mut mode: Box<Mode> = Box::new(Manual::init());
+    let mut mode: Box<Mode> = Box::new(Manual::init(&driver));
     let wait_duration = time::Duration::from_millis(100);
     loop {
         if !handle_controls(&controller, &mut mode, &driver) {
