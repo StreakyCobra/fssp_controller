@@ -33,21 +33,17 @@ fn emit(
             match received {
                 None => break 'emitter,
                 Some(vec) => {
-                    // println!("{:?}", vec);
                     velocity = vec;
                 }
             }
         }
-        // println!("{:?}", velocity);
         command = Command::MoveTo {
             x: Some(velocity[0]),
             y: Some(velocity[1]),
             z: Some(velocity[2]),
             f: None,
         };
-        if Vector3::new(0, 0, 0) != velocity {
-            driver.send(command).unwrap();
-        }
+        driver.send(command).unwrap();
         thread::sleep(wait_duration);
     }
 }
@@ -113,17 +109,16 @@ impl Manual {
     fn handle_axis(&mut self, axis: gilrs::Axis, value: f32) {
         match axis {
             gilrs::Axis::LeftStickX => {
-                self.velocity.x = (value * 10.) as i32;
+                self.velocity.x = (value * 10.) as Num;
             }
             gilrs::Axis::LeftStickY => {
-                self.velocity.y = (value * 10.) as i32;
+                self.velocity.y = (value * 10.) as Num;
             }
             gilrs::Axis::RightStickY => {
-                self.velocity.z = (value * 10.) as i32;
+                self.velocity.z = (value * 10.) as Num;
             }
             _ => (),
         }
-        // println!("{:?}", self.velocity);
         self.thread.send(Some(self.velocity)).unwrap();
     }
 

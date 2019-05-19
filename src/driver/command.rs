@@ -1,30 +1,32 @@
+type Num = i32;
+
 #[derive(Debug, PartialEq)]
 #[allow(dead_code)]
 pub enum Command {
     MoveTo {
-        x: Option<i32>,
-        y: Option<i32>,
-        z: Option<i32>,
-        f: Option<i32>,
+        x: Option<Num>,
+        y: Option<Num>,
+        z: Option<Num>,
+        f: Option<Num>,
     },
     MoveToHome,
     NoOp,
     Pause {
-        p: Option<i32>,
-        s: Option<i32>,
+        p: Option<Num>,
+        s: Option<Num>,
     },
     SetAbsolute,
     SetAttachPosition {
-        n: i32,
-        x: i32,
-        y: i32,
-        z: i32,
+        n: Num,
+        x: Num,
+        y: Num,
+        z: Num,
     },
     SetPosition {
-        x: Option<i32>,
-        y: Option<i32>,
-        z: Option<i32>,
-        e: Option<i32>,
+        x: Option<Num>,
+        y: Option<Num>,
+        z: Option<Num>,
+        e: Option<Num>,
     },
     SetRelative,
     Shutdown,
