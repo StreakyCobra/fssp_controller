@@ -25,11 +25,11 @@ fn emit(mut stream: TcpStream, rx: mpsc::Receiver<Command>) {
     stream.set_nodelay(true).unwrap();
     loop {
         for received in rx.try_iter() {
-            println!("{:?}\r", received);
-            stream
-                .write(format!("{}\n", received.to_gcode()).as_bytes())
-                .unwrap();
-            stream.flush().unwrap();
+            let code = received.to_gcode();
+            if code.len() > 0 {
+                stream.write(format!("{}\n", code).as_bytes()).unwrap();
+                stream.flush().unwrap();
+            }
         }
         thread::sleep(wait_duration);
     }
