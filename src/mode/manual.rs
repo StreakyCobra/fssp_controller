@@ -2,8 +2,8 @@ use controller::control::Control;
 use driver::command::Command;
 use gilrs;
 use gilrs::Button;
-use mode::Mode;
 use mode::calibration::Calibration;
+use mode::Mode;
 use std::sync::mpsc;
 
 #[derive(Debug)]
@@ -48,7 +48,7 @@ impl Mode for Manual {
                     self.handle_axis(axis, value, &driver)
                 }
             }
-            Control::Keyboard { keycode } => println!("Key press: {}\r", keycode as u8 as char),
+            Control::Keyboard { keycode } => self.handle_key(keycode, &driver),
         }
     }
 }
@@ -136,5 +136,10 @@ impl Manual {
                 .unwrap(),
             _ => (),
         }
+    }
+
+    fn handle_key(&self, keycode: i32, tx: &mpsc::Sender<Command>) {
+        println!("Key press: {}\r", keycode as u8 as char);
+        tx.send(Command::NoOp).unwrap();
     }
 }
