@@ -11,38 +11,47 @@ use std::thread;
 use std::time;
 use std::cmp::{min, max};
 
-const WAIT_DURATION_MS: u64 = 100;
+const FREQUENCY: f32 = 10.0;
+const MAX_SPEED: f32 = 10_000.0;
+const MIN_SPEED: f32 = FREQUENCY;
+
+#[derive(Debug, Clone)]
+struct Target {
+    vector: Vector3<Num>,
+    speed: Num,
+}
 
 #[derive(Debug)]
 pub struct Manual {
     driver: mpsc::Sender<Command>,
-    vector: Vector3<Num>,
-    speed: Num,
-    thread: mpsc::Sender<Option<Vector3<Num>>>,
+    vector: Vector3<f32>,
+    speed: f32,
+    thread: mpsc::Sender<Option<Target>>,
 }
 
 fn emit(
-    rx: mpsc::Receiver<Option<Vector3<Num>>>,
+    rx: mpsc::Receiver<Option<Target>>,
     driver: mpsc::Sender<Command>,
-    vector: Vector3<Num>,
+    target: Target,
 ) {
-    let wait_duration = time::Duration::from_millis(WAIT_DURATION_MS);
-    let mut vector = vector;
+    let wait_time: u64 = (1000.0 / FREQUENCY as f64) as u64;
+    let wait_duration = time::Duration::from_millis(wait_time);
+    let mut target = target;
     let mut command;
     'emitter: loop {
         for received in rx.try_iter() {
             match received {
                 None => break 'emitter,
-                Some(vec) => {
-                    vector = vec;
+                Some(t) => {
+                    target = t;
                 }
             }
         }
         command = Command::MoveTo {
-            x: Some(vector[0]),
-            y: Some(vector[1]),
-            z: Some(vector[2]),
-            f: None,
+            x: Some(target.vector.x),
+            y: Some(target.vector.y),
+            z: Some(target.vector.z),
+            f: Some(target.speed),
         };
         driver.send(command).unwrap();
         thread::sleep(wait_duration);
@@ -55,13 +64,16 @@ impl Mode for Manual {
         let (tx, rx) = mpsc::channel();
         let state = Manual {
             driver: driver.clone(),
-            vector: Vector3::new(0, 0, 0),
-            speed: 6000,
+            vector: Vector3::new(0., 0., 0.),
+            speed: 6000.0,
             thread: tx,
         };
         let driver = driver.clone();
-        let vector = state.vector.clone();
-        thread::spawn(move || emit(rx, driver, vector));
+        let target = Target {
+            vector: Vector3::new(0, 0, 0),
+            speed: state.speed as Num,
+        };
+        thread::spawn(move || emit(rx, driver, target));
         return state;
     }
 
@@ -109,7 +121,19 @@ impl Mode for Manual {
 
 impl Manual {
     fn print_speed(&mut self) {
-        println!(":: Speed = {} mm/min\r", self.speed)
+        println!(":: Speed = {} mm/min\r", self.speed as Num)
+    }
+
+    fn update_target(&mut self) {
+        let target = Target {
+            vector: Vector3::new(
+                (self.vector.x * self.speed as f32 / FREQUENCY) as Num,
+                (self.vector.y * self.speed as f32 / FREQUENCY) as Num,
+                (self.vector.z * self.speed as f32 / FREQUENCY) as Num,
+            ),
+            speed: self.speed as Num,
+        };
+        self.thread.send(Some(target)).unwrap();
     }
 
     fn handle_button(&mut self, button: Button) {
@@ -119,38 +143,43 @@ impl Manual {
     fn handle_axis(&mut self, axis: gilrs::Axis, value: f32) {
         match axis {
             gilrs::Axis::LeftStickX => {
-                self.vector.x = (value * 10.) as Num;
+                self.vector.x = value;
             }
             gilrs::Axis::LeftStickY => {
-                self.vector.y = (value * 10.) as Num;
+                self.vector.y = value;
             }
             gilrs::Axis::RightStickY => {
-                self.vector.z = (value * 10.) as Num;
+                self.vector.z = value;
             }
             _ => (),
         }
-        self.thread.send(Some(self.vector)).unwrap();
+        self.update_target();
     }
 
     fn handle_key(&mut self, keycode: i32) {
         match keycode as u8 as char {
             'w' => {
-                self.speed = min(10000, self.speed + 100);
+                self.speed = self.speed + 100.0;
+                if self.speed > MAX_SPEED { self.speed = MAX_SPEED }
                 self.print_speed();
             },
             's' => {
-                self.speed = max(0, self.speed - 100);
+                self.speed = self.speed - 100.0;
+                if self.speed < MIN_SPEED { self.speed = MIN_SPEED }
                 self.print_speed();
             },
             'a' => {
-                self.speed = max(0, self.speed / 2);
+                self.speed = self.speed / 2.0;
+                if self.speed < MIN_SPEED { self.speed = MIN_SPEED }
                 self.print_speed();
             },
             'd' => {
-                self.speed = min(10000, self.speed * 2);
+                self.speed = self.speed * 2.0;
+                if self.speed > MAX_SPEED { self.speed = MAX_SPEED }
                 self.print_speed();
             },
             _ => ()
         }
+        self.update_target();
     }
 }
