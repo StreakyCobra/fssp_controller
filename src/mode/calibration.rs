@@ -2,7 +2,7 @@ use controller::control::Control;
 use driver::command::Command;
 use gilrs;
 use gilrs::Button;
-use mode::manual::Manual;
+use mode::simulation::Simulation;
 use mode::Mode;
 use std::sync::mpsc;
 
@@ -19,14 +19,16 @@ impl Mode for Calibration {
         }
     }
 
+    fn start(&mut self) {}
+
     fn stop(&mut self) {}
 
     fn name(&self) -> String {
-        String::from("Simulation")
+        String::from("Calibration")
     }
 
     fn next_mode(&self) -> Box<Mode> {
-        Box::new(Manual::init(&self.driver))
+        Box::new(Simulation::init(&self.driver))
     }
 
     fn handle(&mut self, control: Control) {

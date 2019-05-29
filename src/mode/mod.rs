@@ -15,6 +15,7 @@ trait Mode {
     where
         Self: Sized;
     fn name(&self) -> String;
+    fn start(&mut self);
     fn stop(&mut self);
     fn next_mode(&self) -> Box<Mode>;
     fn handle(&mut self, control: Control);
@@ -28,6 +29,7 @@ pub fn master_loop(
     let mut mode: Box<Mode> = Box::new(Manual::init(&driver));
     println!(":: Welcome to FSSP\r");
     println!(":: Mode: {}\r", mode.name());
+    mode.start();
     let wait_duration = time::Duration::from_millis(100);
     loop {
         if !handle_controls(&controller, &mut mode) {
@@ -60,6 +62,7 @@ fn next_mode(mode: &mut Box<Mode>) {
     mode.stop();
     *mode = mode.next_mode();
     println!(":: Mode: {}\r", mode.name());
+    mode.start();
 }
 
 fn handle_events(

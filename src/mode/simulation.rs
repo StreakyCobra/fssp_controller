@@ -19,6 +19,8 @@ impl Mode for Simulation {
         }
     }
 
+    fn start(&mut self) {}
+
     fn stop(&mut self) {}
 
     fn name(&self) -> String {
