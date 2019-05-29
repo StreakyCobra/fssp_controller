@@ -6,6 +6,8 @@ use std::{thread, time};
 
 pub mod event;
 
+const WAIT_DURATION_MS: u64 = 1;
+
 pub fn connect_sensor(address: &str) -> mpsc::Receiver<Event> {
     let (tx, rx) = mpsc::channel();
 
@@ -17,7 +19,7 @@ pub fn connect_sensor(address: &str) -> mpsc::Receiver<Event> {
 }
 
 fn emit(stream: TcpStream, tx: mpsc::Sender<Event>) {
-    let wait_duration = time::Duration::from_millis(100);
+    let wait_duration = time::Duration::from_millis(WAIT_DURATION_MS);
     let mut buf = BufReader::new(stream);
     let mut line: String = String::new();
     loop {

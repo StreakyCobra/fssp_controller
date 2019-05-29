@@ -11,7 +11,7 @@ use std::time;
 
 type Num = i32;
 
-const WAIT_DURATION_MS: u64 = 1000;
+const WAIT_DURATION_MS: u64 = 100;
 
 #[derive(Debug)]
 pub struct Manual {

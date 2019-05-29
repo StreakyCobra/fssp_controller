@@ -6,7 +6,7 @@ use std::{thread, time};
 
 pub mod command;
 
-const WAIT_DURATION_MS: u64 = 100;
+const WAIT_DURATION_MS: u64 = 1;
 
 pub fn connect_driver(address: &str) -> mpsc::Sender<Command> {
     let (tx, rx) = mpsc::channel();
