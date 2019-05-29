@@ -1,4 +1,4 @@
-type Num = i32;
+pub type Num = i32;
 
 #[derive(Debug, PartialEq)]
 #[allow(dead_code)]
