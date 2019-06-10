@@ -11,9 +11,9 @@ use std::thread;
 use std::time;
 use std::cmp::{min, max};
 
-const FREQUENCY: f32 = 10.0;
-const MAX_SPEED: f32 = 10_000.0;
-const MIN_SPEED: f32 = FREQUENCY;
+const FREQUENCY: f32 = 1.0;
+const MAX_SPEED: f32 = 60_000.0;
+const MIN_SPEED: f32 = FREQUENCY * 60.0;
 
 #[derive(Debug, Clone)]
 struct Target {
@@ -127,9 +127,9 @@ impl Manual {
     fn update_target(&mut self) {
         let target = Target {
             vector: Vector3::new(
-                (self.vector.x * self.speed as f32 / FREQUENCY) as Num,
-                (self.vector.y * self.speed as f32 / FREQUENCY) as Num,
-                (self.vector.z * self.speed as f32 / FREQUENCY) as Num,
+                (self.vector.x * self.speed as f32 / (FREQUENCY * 60.0)) as Num,
+                (self.vector.y * self.speed as f32 / (FREQUENCY * 60.0)) as Num,
+                (self.vector.z * self.speed as f32 / (FREQUENCY * 60.0)) as Num,
             ),
             speed: self.speed as Num,
         };
