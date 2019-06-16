@@ -11,7 +11,7 @@ use std::thread;
 use std::time;
 use std::cmp::{min, max};
 
-const FREQUENCY: f32 = 1.0;
+const FREQUENCY: f32 = 10.0;
 const MAX_SPEED: f32 = 60_000.0;
 const MIN_SPEED: f32 = FREQUENCY * 60.0;
 
@@ -141,6 +141,7 @@ impl Manual {
     }
 
     fn handle_axis(&mut self, axis: gilrs::Axis, value: f32) {
+        let value = value.powf(3.);
         match axis {
             gilrs::Axis::LeftStickX => {
                 self.vector.x = value;
