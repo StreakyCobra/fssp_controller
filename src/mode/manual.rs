@@ -179,7 +179,7 @@ impl Manual {
     }
 
     fn handle_button(&mut self, button: Button, value: f32) {
-        let value = value.powf(3.);
+        let value = response_curve(value);
         match button {
             gilrs::Button::LeftTrigger2 => {
                 self.axis.z = -value;
@@ -193,7 +193,7 @@ impl Manual {
     }
 
     fn handle_axis(&mut self, axis: gilrs::Axis, value: f32) {
-        let value = value.powf(3.);
+        let value = response_curve(value);
         match axis {
             gilrs::Axis::LeftStickX => {
                 self.axis.x = value;
@@ -252,4 +252,13 @@ fn update_speed<F>(speed: &mut f32, func: F, min: f32, max: f32) -> f32
     if result < min { result = min }
     *speed = result;
     result
+}
+
+fn response_curve(value: f32) -> f32 {
+    let mut value = value;
+    if value.abs() < 0.05 { 
+        value = 0.
+    }
+    value = value.powf(3.);
+    return value
 }
