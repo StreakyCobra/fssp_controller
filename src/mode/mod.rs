@@ -30,13 +30,12 @@ pub fn master_loop(
     println!(":: Welcome to FSSP\r");
     println!(":: Mode: {}\r", mode.name());
     mode.start();
-    let wait_duration = time::Duration::from_millis(100);
     loop {
         if !handle_controls(&controller, &mut mode) {
             break;
         };
         handle_events(&sensor, &mut mode, &driver);
-        thread::sleep(wait_duration);
+        thread::yield_now();
     }
 }
 

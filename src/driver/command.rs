@@ -9,6 +9,11 @@ pub enum Command {
         z: Option<Num>,
         f: Option<Num>,
     },
+    RotateTo {
+        u: Option<Num>,
+        v: Option<Num>,
+        f: Option<Num>,
+    },
     MoveToHome,
     NoOp,
     Pause {
@@ -52,6 +57,21 @@ impl GCode for Command {
                 match z {
                     None => (),
                     Some(val) => params.push_str(&format!("Z{} ", val)),
+                }
+                match f {
+                    None => format!("G0 {}", params),
+                    Some(val) => format!("G1 {}F{}", params, val),
+                }
+            }
+            Command::RotateTo { u, v, f } => {
+                let mut params = String::new();
+                match u {
+                    None => (),
+                    Some(val) => params.push_str(&format!("U{} ", val)),
+                }
+                match v {
+                    None => (),
+                    Some(val) => params.push_str(&format!("V{} ", val)),
                 }
                 match f {
                     None => format!("G0 {}", params),

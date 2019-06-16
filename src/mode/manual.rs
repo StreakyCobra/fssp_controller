@@ -5,28 +5,46 @@ use gilrs;
 use gilrs::Button;
 use mode::calibration::Calibration;
 use mode::Mode;
-use na::Vector3;
+use na::{Vector3, Vector2};
 use std::sync::mpsc;
 use std::thread;
 use std::time;
-use std::cmp::{min, max};
 
 const FREQUENCY: f32 = 10.0;
-const MAX_SPEED: f32 = 60_000.0;
-const MIN_SPEED: f32 = FREQUENCY * 60.0;
+const MAX_TRANSLATION_SPEED: f32 = 60_000.0;
+const MIN_TRANSLATION_SPEED: f32 = FREQUENCY * 60.0;
+const MAX_ROTATION_SPEED: f32 = 2_700.0;
+const MIN_ROTATION_SPEED: f32 = FREQUENCY * 60.0;
 
 #[derive(Debug, Clone)]
 struct Target {
-    vector: Vector3<Num>,
-    speed: Num,
+    translation: Vector3<Num>,
+    translation_speed: Num,
+    rotation: Vector2<Num>,
+    rotation_speed: Num,
+}
+
+#[derive(Debug)]
+struct Axis<T> {
+    x: T,
+    y: T,
+    z: T,
+    u: T,
+    v: T,
+}
+
+#[derive(Debug)]
+struct Speed<T> {
+    translational: T,
+    rotational: T,
 }
 
 #[derive(Debug)]
 pub struct Manual {
     driver: mpsc::Sender<Command>,
-    vector: Vector3<f32>,
-    speed: f32,
     thread: mpsc::Sender<Option<Target>>,
+    axis: Axis<f32>,
+    speed: Speed<f32>,
 }
 
 fn emit(
@@ -48,10 +66,16 @@ fn emit(
             }
         }
         command = Command::MoveTo {
-            x: Some(target.vector.x),
-            y: Some(target.vector.y),
-            z: Some(target.vector.z),
-            f: Some(target.speed),
+            x: Some(target.translation.x),
+            y: Some(target.translation.y),
+            z: Some(target.translation.z),
+            f: Some(target.translation_speed),
+        };
+        driver.send(command).unwrap();
+        command = Command::RotateTo {
+            u: Some(target.rotation.x),
+            v: Some(target.rotation.y),
+            f: Some(target.rotation_speed),
         };
         driver.send(command).unwrap();
         thread::sleep(wait_duration);
@@ -60,25 +84,36 @@ fn emit(
 
 impl Mode for Manual {
     fn init(driver: &mpsc::Sender<Command>) -> Self {
-        driver.send(Command::SetRelative).unwrap();
+        driver.send(Command::SetAbsolute).unwrap();
         let (tx, rx) = mpsc::channel();
         let state = Manual {
             driver: driver.clone(),
-            vector: Vector3::new(0., 0., 0.),
-            speed: 6000.0,
             thread: tx,
+            axis: Axis {
+                x: 0.,
+                y: 0.,
+                z: 0.,
+                u: 0.,
+                v: 0.,
+            },
+            speed: Speed {
+                translational: 6000.,
+                rotational: 2000.,
+            }
         };
         let driver = driver.clone();
         let target = Target {
-            vector: Vector3::new(0, 0, 0),
-            speed: state.speed as Num,
+            translation: Vector3::new(0, 0, 0),
+            translation_speed: state.speed.translational as Num,
+            rotation: Vector2::new(0, 0),
+            rotation_speed: state.speed.rotational as Num,
         };
         thread::spawn(move || emit(rx, driver, target));
         return state;
     }
 
     fn start(&mut self) {
-        self.print_speed();
+        self.print_state();
     }
 
     fn stop(&mut self) {
@@ -103,8 +138,8 @@ impl Mode for Manual {
                         time: _,
                     },
             } => {
-                if let gilrs::EventType::ButtonReleased { 0: button, 1: _ } = event {
-                    self.handle_button(button)
+                if let gilrs::EventType::ButtonChanged { 0: button, 1: value, 2: _ } = event {
+                    self.handle_button(button, value)
                 } else if let gilrs::EventType::AxisChanged {
                     0: axis,
                     1: value,
@@ -120,37 +155,57 @@ impl Mode for Manual {
 }
 
 impl Manual {
-    fn print_speed(&mut self) {
-        println!(":: Speed = {} mm/min\r", self.speed as Num)
+    fn print_state(&mut self) {
+        println!(":: Translation speed = {} mm/min\r", self.speed.translational as Num);
+        println!(":: Rotation speed = {} deg/min\r", self.speed.rotational as Num);
+        println!("----------\r");
     }
 
     fn update_target(&mut self) {
         let target = Target {
-            vector: Vector3::new(
-                (self.vector.x * self.speed as f32 / (FREQUENCY * 60.0)) as Num,
-                (self.vector.y * self.speed as f32 / (FREQUENCY * 60.0)) as Num,
-                (self.vector.z * self.speed as f32 / (FREQUENCY * 60.0)) as Num,
+            translation: Vector3::new(
+                (self.axis.x * self.speed.translational as f32 / (FREQUENCY * 60.0)) as Num,
+                (self.axis.y * self.speed.translational as f32 / (FREQUENCY * 60.0)) as Num,
+                (self.axis.z * self.speed.translational as f32 / (FREQUENCY * 60.0)) as Num,
             ),
-            speed: self.speed as Num,
+            translation_speed: self.speed.translational as Num,
+            rotation: Vector2::new(
+                (self.axis.u * self.speed.rotational as f32 / (FREQUENCY * 60.0)) as Num,
+                (self.axis.v * self.speed.rotational as f32 / (FREQUENCY * 60.0)) as Num,
+            ),
+            rotation_speed: self.speed.rotational as Num,
         };
         self.thread.send(Some(target)).unwrap();
     }
 
-    fn handle_button(&mut self, button: Button) {
-        println!("Button press: {:?}\r", button);
+    fn handle_button(&mut self, button: Button, value: f32) {
+        let value = value.powf(3.);
+        match button {
+            gilrs::Button::LeftTrigger2 => {
+                self.axis.z = -value;
+            },
+            gilrs::Button::RightTrigger2 => {
+                self.axis.z = value;
+            }
+            _ => (),
+        }
+        self.update_target();
     }
 
     fn handle_axis(&mut self, axis: gilrs::Axis, value: f32) {
         let value = value.powf(3.);
         match axis {
             gilrs::Axis::LeftStickX => {
-                self.vector.x = value;
+                self.axis.x = value;
             }
             gilrs::Axis::LeftStickY => {
-                self.vector.y = value;
+                self.axis.y = value;
+            }
+            gilrs::Axis::RightStickX => {
+                self.axis.u = value;
             }
             gilrs::Axis::RightStickY => {
-                self.vector.z = value;
+                self.axis.v = value;
             }
             _ => (),
         }
@@ -160,27 +215,41 @@ impl Manual {
     fn handle_key(&mut self, keycode: i32) {
         match keycode as u8 as char {
             'w' => {
-                self.speed = self.speed + 100.0;
-                if self.speed > MAX_SPEED { self.speed = MAX_SPEED }
-                self.print_speed();
+                update_speed(&mut self.speed.translational, |x| x * 2., MIN_TRANSLATION_SPEED, MAX_TRANSLATION_SPEED);
             },
             's' => {
-                self.speed = self.speed - 100.0;
-                if self.speed < MIN_SPEED { self.speed = MIN_SPEED }
-                self.print_speed();
+                update_speed(&mut self.speed.translational, |x| x / 2., MIN_TRANSLATION_SPEED, MAX_TRANSLATION_SPEED);
             },
             'a' => {
-                self.speed = self.speed / 2.0;
-                if self.speed < MIN_SPEED { self.speed = MIN_SPEED }
-                self.print_speed();
+                update_speed(&mut self.speed.translational, |x| x - 100., MIN_TRANSLATION_SPEED, MAX_TRANSLATION_SPEED);
             },
             'd' => {
-                self.speed = self.speed * 2.0;
-                if self.speed > MAX_SPEED { self.speed = MAX_SPEED }
-                self.print_speed();
+                update_speed(&mut self.speed.translational, |x| x + 100., MIN_TRANSLATION_SPEED, MAX_TRANSLATION_SPEED);
+            },
+            'i' => {
+                update_speed(&mut self.speed.rotational, |x| x * 2., MIN_ROTATION_SPEED, MAX_ROTATION_SPEED);
+            },
+            'k' => {
+                update_speed(&mut self.speed.rotational, |x| x / 2., MIN_ROTATION_SPEED, MAX_ROTATION_SPEED);
+            },
+            'j' => {
+                update_speed(&mut self.speed.rotational, |x| x - 100., MIN_ROTATION_SPEED, MAX_ROTATION_SPEED);
+            },
+            'l' => {
+                update_speed(&mut self.speed.rotational, |x| x + 100., MIN_ROTATION_SPEED, MAX_ROTATION_SPEED);
             },
             _ => ()
         }
+        self.print_state();
         self.update_target();
     }
+}
+
+fn update_speed<F>(speed: &mut f32, func: F, min: f32, max: f32) -> f32
+    where F: Fn(f32) -> f32 {
+    let mut result = func(*speed);
+    if result > max { result = max }
+    if result < min { result = min }
+    *speed = result;
+    result
 }
