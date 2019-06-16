@@ -18,13 +18,11 @@ const MIN_ROTATION_SPEED: f32 = FREQUENCY * 60.0;
 
 #[derive(Debug, Clone)]
 struct Target {
-    translation: Vector3<Num>,
-    translation_speed: Num,
-    rotation: Vector2<Num>,
-    rotation_speed: Num,
+    axis: Axis<f32>,
+    speed: Speed<f32>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Axis<T> {
     x: T,
     y: T,
@@ -33,7 +31,7 @@ struct Axis<T> {
     v: T,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Speed<T> {
     translational: T,
     rotational: T,
@@ -47,7 +45,7 @@ pub struct Manual {
     speed: Speed<f32>,
 }
 
-fn emit(
+fn integrate(
     rx: mpsc::Receiver<Option<Target>>,
     driver: mpsc::Sender<Command>,
     target: Target,
@@ -55,6 +53,8 @@ fn emit(
     let wait_time: u64 = (1000.0 / FREQUENCY as f64) as u64;
     let wait_duration = time::Duration::from_millis(wait_time);
     let mut target = target;
+    let mut position = Vector3::new(0., 0., 0.);
+    let mut rotation = Vector2::new(0., 0.);
     let mut command;
     'emitter: loop {
         for received in rx.try_iter() {
@@ -65,17 +65,24 @@ fn emit(
                 }
             }
         }
+
+        position.x = target.axis.x * target.speed.translational as f32 / (FREQUENCY * 60.0);
+        position.y = target.axis.y * target.speed.translational as f32 / (FREQUENCY * 60.0);
+        position.z = target.axis.z * target.speed.translational as f32 / (FREQUENCY * 60.0);
+        rotation.x = target.axis.u * target.speed.rotational as f32 / (FREQUENCY * 60.0);
+        rotation.y = target.axis.v * target.speed.rotational as f32 / (FREQUENCY * 60.0);
+    
         command = Command::MoveTo {
-            x: Some(target.translation.x),
-            y: Some(target.translation.y),
-            z: Some(target.translation.z),
-            f: Some(target.translation_speed),
+            x: Some(position.x as Num),
+            y: Some(position.y as Num),
+            z: Some(position.z as Num),
+            f: Some(target.speed.translational as Num),
         };
         driver.send(command).unwrap();
         command = Command::RotateTo {
-            u: Some(target.rotation.x),
-            v: Some(target.rotation.y),
-            f: Some(target.rotation_speed),
+            u: Some(rotation.x as Num),
+            v: Some(rotation.y as Num),
+            f: Some(target.speed.rotational as Num),
         };
         driver.send(command).unwrap();
         thread::sleep(wait_duration);
@@ -103,12 +110,10 @@ impl Mode for Manual {
         };
         let driver = driver.clone();
         let target = Target {
-            translation: Vector3::new(0, 0, 0),
-            translation_speed: state.speed.translational as Num,
-            rotation: Vector2::new(0, 0),
-            rotation_speed: state.speed.rotational as Num,
+            axis: state.axis.clone(),
+            speed: state.speed.clone(),
         };
-        thread::spawn(move || emit(rx, driver, target));
+        thread::spawn(move || integrate(rx, driver, target));
         return state;
     }
 
@@ -163,17 +168,8 @@ impl Manual {
 
     fn update_target(&mut self) {
         let target = Target {
-            translation: Vector3::new(
-                (self.axis.x * self.speed.translational as f32 / (FREQUENCY * 60.0)) as Num,
-                (self.axis.y * self.speed.translational as f32 / (FREQUENCY * 60.0)) as Num,
-                (self.axis.z * self.speed.translational as f32 / (FREQUENCY * 60.0)) as Num,
-            ),
-            translation_speed: self.speed.translational as Num,
-            rotation: Vector2::new(
-                (self.axis.u * self.speed.rotational as f32 / (FREQUENCY * 60.0)) as Num,
-                (self.axis.v * self.speed.rotational as f32 / (FREQUENCY * 60.0)) as Num,
-            ),
-            rotation_speed: self.speed.rotational as Num,
+            axis: self.axis.clone(),
+            speed: self.speed.clone(),
         };
         self.thread.send(Some(target)).unwrap();
     }
