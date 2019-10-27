@@ -53,7 +53,7 @@ fn integrate(
     let wait_time: u64 = (1000.0 / FREQUENCY as f64) as u64;
     let wait_duration = time::Duration::from_millis(wait_time);
     let mut target = target;
-    let mut position = Vector3::new(0., 0., 0.);
+    let mut position = Vector3::new(1350., 1800., 400.);
     let mut rotation = Vector2::new(0., 0.);
     let mut command;
     'emitter: loop {
@@ -66,11 +66,11 @@ fn integrate(
             }
         }
 
-        position.x = target.axis.x * target.speed.translational as f32 / (FREQUENCY * 60.0);
-        position.y = target.axis.y * target.speed.translational as f32 / (FREQUENCY * 60.0);
-        position.z = target.axis.z * target.speed.translational as f32 / (FREQUENCY * 60.0);
-        rotation.x = target.axis.u * target.speed.rotational as f32 / (FREQUENCY * 60.0);
-        rotation.y = target.axis.v * target.speed.rotational as f32 / (FREQUENCY * 60.0);
+        position.x += target.axis.x * target.speed.translational as f32 / (FREQUENCY * 60.0);
+        position.y += target.axis.y * target.speed.translational as f32 / (FREQUENCY * 60.0);
+        position.z += target.axis.z * target.speed.translational as f32 / (FREQUENCY * 60.0);
+        rotation.x += target.axis.u * target.speed.rotational as f32 / (FREQUENCY * 60.0);
+        rotation.y += target.axis.v * target.speed.rotational as f32 / (FREQUENCY * 60.0);
     
         command = Command::MoveTo {
             x: Some(position.x as Num),
