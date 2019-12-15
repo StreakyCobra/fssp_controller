@@ -31,7 +31,6 @@ pub enum Command {
         x: Option<Num>,
         y: Option<Num>,
         z: Option<Num>,
-        e: Option<Num>,
     },
     SetRelative,
     Shutdown,
@@ -106,7 +105,7 @@ impl GCode for Command {
                 };
                 format!("{} {}", code, params)
             }
-            Command::SetPosition { x, y, z, e } => {
+            Command::SetPosition { x, y, z } => {
                 let mut params = String::new();
                 match x {
                     None => (),
@@ -119,10 +118,6 @@ impl GCode for Command {
                 match z {
                     None => (),
                     Some(val) => params.push_str(&format!("Z{} ", val)),
-                }
-                match e {
-                    None => (),
-                    Some(val) => params.push_str(&format!("E{}", val)),
                 }
                 format!("G92 {}", params)
             }
