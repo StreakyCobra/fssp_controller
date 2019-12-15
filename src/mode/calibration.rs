@@ -8,7 +8,7 @@ use mode::Mode;
 use std::sync::mpsc;
 use std::time;
 use std::thread;
-use std::cmp::{min, max};
+use std::cmp::min;
 
 const NUM_MOTORS: usize = 4;
 const FREQUENCY: f32 = 10.0;
@@ -22,15 +22,21 @@ struct Target {
     speed: f32,
 }
 
+enum Event {
+    Target(Target),
+    SetZero,
+    Quit,
+}
+
 #[derive(Debug)]
 pub struct Calibration {
     driver: mpsc::Sender<Command>,
-    thread: mpsc::Sender<Option<Target>>,
+    thread: mpsc::Sender<Event>,
     target: Target
 }
 
 fn integrate(
-    rx: mpsc::Receiver<Option<Target>>,
+    rx: mpsc::Receiver<Event>,
     driver: mpsc::Sender<Command>,
     target: Target,
 ) {
@@ -44,8 +50,11 @@ fn integrate(
 
         for received in rx.try_iter() {
             match received {
-                None => break 'emitter,
-                Some(t) => {
+                Event::Quit => break 'emitter,
+                Event::SetZero => {
+                    positions[target.motor] = 0.;
+                }
+                Event::Target(t) => {
                     targets[t.motor as usize] = t;
                     target = targets[t.motor];
                 }
@@ -89,7 +98,7 @@ impl Mode for Calibration {
     }
 
     fn stop(&mut self) {
-        self.thread.send(None).unwrap();
+        self.thread.send(Event::Quit).unwrap();
     }
 
     fn name(&self) -> String {
@@ -134,19 +143,21 @@ impl Calibration {
     }
 
     fn update_target(&mut self) {
-        self.thread.send(Some(self.target.clone())).unwrap();
+        self.thread.send(Event::Target(self.target.clone())).unwrap();
     }
 
 
     fn handle_button(&mut self, button: Button) {
         match button {
             Button::DPadUp => {
-                self.target.length = 0.;
                 self.target.motor = min(self.target.motor + 1, NUM_MOTORS - 1);
             }
             Button::DPadDown => {
-                self.target.length = 0.;
                 self.target.motor = if self.target.motor > 0 {self.target.motor - 1} else {0}
+            }
+            Button::Select => {
+                self.driver.send(Command::SetMotorZero {m: self.target.motor as Num}).unwrap();
+                self.thread.send(Event::SetZero).unwrap();
             }
             _ => ()
         }
