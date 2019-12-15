@@ -14,6 +14,11 @@ pub enum Command {
         v: Option<Num>,
         f: Option<Num>,
     },
+    MoveIndividual {
+        m: Num,
+        l: Num,
+        f: Option<Num>,
+    },
     MoveToHome,
     NoOp,
     Pause {
@@ -75,6 +80,12 @@ impl GCode for Command {
                 match f {
                     None => format!("G0 {}", params),
                     Some(val) => format!("G1 {}F{}", params, val),
+                }
+            }
+            Command::MoveIndividual {m, l, f} => {
+                match f {
+                    None => format!("G6 M{} L{}", m, l),
+                    Some(val) => format!("G6 M{} L{} F{}", m, l, val),
                 }
             }
             Command::MoveToHome => format!("G28"),
