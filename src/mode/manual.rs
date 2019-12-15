@@ -22,6 +22,11 @@ struct Target {
     speed: Speed<f32>,
 }
 
+enum Event {
+    Target(Target),
+    Quit,
+}
+
 #[derive(Debug, Clone)]
 struct Axis<T> {
     x: T,
@@ -40,13 +45,13 @@ struct Speed<T> {
 #[derive(Debug)]
 pub struct Manual {
     driver: mpsc::Sender<Command>,
-    thread: mpsc::Sender<Option<Target>>,
+    thread: mpsc::Sender<Event>,
     axis: Axis<f32>,
     speed: Speed<f32>,
 }
 
 fn integrate(
-    rx: mpsc::Receiver<Option<Target>>,
+    rx: mpsc::Receiver<Event>,
     driver: mpsc::Sender<Command>,
     target: Target,
 ) {
@@ -59,8 +64,8 @@ fn integrate(
     'emitter: loop {
         for received in rx.try_iter() {
             match received {
-                None => break 'emitter,
-                Some(t) => {
+                Event::Quit => break 'emitter,
+                Event::Target(t) => {
                     target = t;
                 }
             }
@@ -122,7 +127,7 @@ impl Mode for Manual {
     }
 
     fn stop(&mut self) {
-        self.thread.send(None).unwrap();
+        self.thread.send(Event::Quit).unwrap();
     }
 
     fn name(&self) -> String {
@@ -171,7 +176,7 @@ impl Manual {
             axis: self.axis.clone(),
             speed: self.speed.clone(),
         };
-        self.thread.send(Some(target)).unwrap();
+        self.thread.send(Event::Target(target)).unwrap();
     }
 
     fn handle_button(&mut self, button: Button, value: f32) {
