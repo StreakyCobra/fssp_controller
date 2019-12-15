@@ -54,7 +54,7 @@ fn integrate(
 
         positions[target.motor as usize] += target.length * target.speed / (FREQUENCY * 60.0);
     
-        command = Command::MoveIndividual {
+        command = Command::MoveMotorTo {
             m: target.motor as Num,
             l: positions[target.motor] as Num,
             f: Some(target.speed as Num),

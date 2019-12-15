@@ -14,7 +14,7 @@ pub enum Command {
         v: Option<Num>,
         f: Option<Num>,
     },
-    MoveIndividual {
+    MoveMotorTo {
         m: Num,
         l: Num,
         f: Option<Num>,
@@ -36,6 +36,9 @@ pub enum Command {
         x: Option<Num>,
         y: Option<Num>,
         z: Option<Num>,
+    },
+    SetMotorZero {
+        m: Num,
     },
     SetRelative,
     Shutdown,
@@ -82,7 +85,7 @@ impl GCode for Command {
                     Some(val) => format!("G1 {}F{}", params, val),
                 }
             }
-            Command::MoveIndividual {m, l, f} => {
+            Command::MoveMotorTo {m, l, f} => {
                 match f {
                     None => format!("G6 M{} L{}", m, l),
                     Some(val) => format!("G6 M{} L{} F{}", m, l, val),
@@ -132,6 +135,7 @@ impl GCode for Command {
                 }
                 format!("G92 {}", params)
             }
+            Command::SetMotorZero {m} => format!("G92 M{}", m),
             Command::SetRelative => String::from("G91"),
             Command::Shutdown => String::from("M00"),
         }
