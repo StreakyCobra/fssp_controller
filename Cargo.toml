@@ -4,6 +4,6 @@ version = "0.1.0"
 authors = ["Fabien Dubosson <fabien.dubosson@gmail.com>"]
 
 [dependencies]
-gilrs = "0.6.1"
-nalgebra = "0.16.0"
+gilrs = "0.7.3"
+nalgebra = "0.19.0"
 ncurses = "5.99.0"
